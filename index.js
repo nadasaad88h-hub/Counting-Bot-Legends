@@ -8,8 +8,8 @@ const {
 
 const TOKEN = process.env.DISCORD_TOKEN;
 
-// OPTIONAL: lock to one channel (recommended)
-const COUNTING_CHANNEL_ID = "YOUR_CHANNEL_ID_HERE";
+// ✅ Your counting channel
+const COUNTING_CHANNEL_ID = "1494238876829483078";
 
 // Stores last correct number per channel
 const lastNumber = new Map();
@@ -27,14 +27,15 @@ client.once("ready", () => {
 });
 
 client.on(Events.MessageCreate, async (message) => {
+  if (!message.guild) return;
   if (message.author.bot) return;
 
-  // only allow one channel (optional safety)
-  if (COUNTING_CHANNEL_ID && message.channel.id !== COUNTING_CHANNEL_ID) return;
+  // Only allow counting channel
+  if (message.channel.id !== COUNTING_CHANNEL_ID) return;
 
   const content = message.content.trim();
 
-  // ❌ If not a number → delete
+  // Delete non-numbers
   if (!/^\d+$/.test(content)) {
     return message.delete().catch(() => {});
   }
@@ -42,15 +43,13 @@ client.on(Events.MessageCreate, async (message) => {
   const number = parseInt(content);
 
   const prev = lastNumber.get(message.channel.id) ?? 0;
-  const expected = prev + 1;
 
-  // ❌ wrong number → delete
-  if (number !== expected) {
-    await message.delete().catch(() => {});
-    return;
+  // Wrong number → delete
+  if (number !== prev + 1) {
+    return message.delete().catch(() => {});
   }
 
-  // ✅ correct number → accept
+  // Correct number → update
   lastNumber.set(message.channel.id, number);
 });
 
